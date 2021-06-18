@@ -1,5 +1,13 @@
 <h1>{{ __('Zabbix Information!') }}</h1>
 
+@component('modal-component',[
+    "id" => "hostDetailedInfoModal"
+])
+<div id="hostInfo-table" class="table-content">
+    <div class="table-body"> </div>
+</div>
+@endcomponent
+
 <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 15px;">
     <li class="nav-item">
         <a class="nav-link active"  onclick="listHostsTab()" href="#tab1" data-toggle="tab">List Hosts</a>
@@ -45,22 +53,23 @@
         });
     }
 
-    function showHostDetailedInfoModal() {
+    function showHostDetailedInfoModal(line) {
+        showSwal('{{__("Yükleniyor...")}}','info',2000);
         
-    }
+        var form = new FormData();
+        let hostName = line.querySelector("#host").innerHTML;
+        let hostId = line.querySelector("#hostId").innerHTML;
+        form.append("hostId", hostId);
 
-    getHostname();
-    function getHostname(){
-        showSwal('{{__("Yükleniyor...")}}', 'info');
-        let data = new FormData();
-        request("{{API("get_hostname")}}", data, function(response){
-            response = JSON.parse(response);
-            $('#hostname').text(response.message);
-            Swal.close();
-            $('#setHostnameModal').modal('hide')
-        }, function(response){
-            response = JSON.parse(response);
-            showSwal(response.message, 'error');
+        request(API('hostDetailedInfo'), form, function(response) {
+            $('#hostInfo-table').find('.table-body').html(response).find("table").DataTable(dataTablePresets('normal'));
+            $('#hostDetailedInfoModal').find('.modal-title').html('<h4><strong>' + hostName + ' - {{__("Detailed Host Information")}}</strong></h4>');
+            $('#hostDetailedInfoModal').modal("show");
+
+        }, function(response) {
+            let error = JSON.parse(response);
+            showSwal(error.message, 'error', 3000);
         });
     }
+
 </script>
