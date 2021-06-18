@@ -1,0 +1,17 @@
+{
+    "jsonrpc": "2.0",
+    "method": "host.get",
+    "params": {
+          "output": [
+              "host"
+          ],
+          "selectInventory": [
+              "tag"
+          ],
+          "searchInventory": {
+              "tag": ""
+          }
+      },
+    "auth": AUTHID,
+    "id": 1
+  }

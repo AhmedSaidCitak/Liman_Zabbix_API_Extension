@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "../../.."
+		},
+		{
+			"path": "../../tabliyapi"
+		},
+		{
+			"path": "../../replikasyon"
+		},
+		{
+			"path": "../../modalyapisi"
+		},
+		{
+			"path": "../../ldap"
+		},
+		{
+			"path": ".."
+		}
+	],
+	"settings": {}
+}
