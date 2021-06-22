@@ -8,15 +8,28 @@
 </div>
 @endcomponent
 
+
 <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 15px;">
     <li class="nav-item">
         <a class="nav-link active"  onclick="listHostsTab()" href="#tab1" data-toggle="tab">List Hosts</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link "  onclick="ListGivenHostInfo()" href="#tab2" data-toggle="tab">List Given Host Info</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link "  onclick="listGivenHostTriggers()" href="#tab3" data-toggle="tab">List Given Host Triggers</a>
     </li>
 </ul>
 
 <div class="tab-content">
     <div id="tab1" class="tab-pane active">
-        <div class="table-responsive ZabbixTable" id="zabbixHostTable"></div> 
+        <div class="table-responsive ZabbixTable table-striped" id="zabbixHostTable"></div> 
+    </div>
+    <div id="tab2" class="tab-pane">
+        <div class="table-responsive ZabbixTable table-striped" id="zabbixGivenHostInfoTable"></div> 
+    </div>
+    <div id="tab3" class="tab-pane">
+        <div class="table-responsive ZabbixTable table-striped" id="zabbixGivenHostTriggerInfoTable"></div> 
     </div>
 </div>
 
@@ -72,4 +85,33 @@
         });
     }
 
+    function ListGivenHostInfo() {
+        var form = new FormData();
+        request(API('givenHostDetailedInfo'), form, function(response) {
+            $('#zabbixGivenHostInfoTable').html(response).find('table').DataTable({
+            bFilter: true,
+            "language" : {
+                url : "/turkce.json"
+            }
+            });;
+        }, function(response) {
+            let error = JSON.parse(response);
+            showSwal(error.message, 'error', 3000);
+        });
+    }
+
+    function listGivenHostTriggers() {
+        var form = new FormData();
+        request(API('listTriggersOfGivenHost'), form, function(response) {
+            $('#zabbixGivenHostTriggerInfoTable').html(response).find('table').DataTable({
+            bFilter: true,
+            "language" : {
+                url : "/turkce.json"
+            }
+            });;
+        }, function(response) {
+            let error = JSON.parse(response);
+            showSwal(error.message, 'error', 3000);
+        });
+    }
 </script>

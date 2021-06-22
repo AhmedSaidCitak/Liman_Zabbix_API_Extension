@@ -2,8 +2,15 @@
     "name": "Zabbix",
     "publisher": "Administrator",
     "version": "0.0.1",
-    "version_code": 1,
-    "database": [],
+    "version_code": 2,
+    "database": [
+        {
+            "variable": "hostName",
+            "type": "text",
+            "name": "Zabbix eklentisindeki 2. tabda, \u00f6zelliklerini listelemek istedi\u011finiz sunucu ad\u0131n\u0131 giriniz",
+            "required": false
+        }
+    ],
     "widgets": [],
     "language": "php",
     "status": 0,

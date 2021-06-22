@@ -147,4 +147,92 @@
         }
     }
 
+    function givenHostDetailedInfo() {
+        $contentType = "'Content-Type: application/json-rpc'";
+        $zabbixServer = "192.168.1.69";
+        $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
+        $auth = authenticate();
+        
+        $data = "'{ 
+            \"jsonrpc\": \"2.0\", 
+            \"method\": \"host.get\",
+            \"params\": {},  
+            \"id\": 1,
+            \"auth\":\"" . $auth . "\"
+        }'";
+
+        $command = "curl -s -X POST -H " . $contentType . " -d " . $data . " " . $zabbixApiUrl . " | jq '.' ";
+        $returnVal = runCommand(sudo() . $command);
+        $informationOfHosts = json_decode($returnVal,true);
+
+        $tableData = [];
+        $attrArray = array("hostid", "proxy_hostid", "host", "status", "disable_until", "error", "available", "errors_from", "lastaccess", "ipmi_authtype",
+                        "ipmi_privilege", "ipmi_username", "ipmi_password", "ipmi_disable_until", "ipmi_available", "snmp_disable_until", "snmp_available", "maintenanceid", "maintenance_status", "maintenance_type",
+                        "maintenance_from", "ipmi_errors_from", "snmp_errors_from", "ipmi_error", "snmp_error", "jmx_disable_until", "jmx_available", "jmx_errors_from", "jmx_error", "name",
+                        "flags", "templateid", "description", "tls_connect", "tls_accept", "tls_issuer", "tls_subject", "tls_psk_identity", "tls_psk", "proxy_address", "auto_compress");
+        
+        $hostName = extensionDb('hostName');
+
+        for ($i=0; $i < count($informationOfHosts["result"]) ; $i++) { 
+            if($informationOfHosts["result"][$i]["host"] == $hostName) {
+                for ($j=0; $j < count($attrArray); $j++) {
+                    $tableData[] = [
+                        "attrName" => $attrArray[$j],
+                        "attrValue" => $informationOfHosts["result"][$i][$attrArray[$j]]
+                    ];
+                }
+                
+                return view('table', [
+                    "value" => $tableData,
+                    "title" => ["Host Attributes", "Values"],
+                    "display" => ["attrName" , "attrValue"],
+                ]);
+            }
+        }
+    }
+
+    function listTriggersOfGivenHost() {
+        $contentType = "'Content-Type: application/json-rpc'";
+        $zabbixServer = "192.168.1.69";
+        $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
+        $auth = authenticate();
+        $hostName = extensionDb('hostName');
+        
+        $data = "'{ 
+            \"jsonrpc\": \"2.0\", 
+            \"method\": \"trigger.get\",
+            \"params\": {
+                \"host\": \"" . $hostName . "\",
+                \"output\": \"extend\",
+                \"selectFunctions\": \"extend\"
+            },  
+            \"id\": 1,
+            \"auth\":\"" . $auth . "\"
+        }'";
+
+        $command = "curl -s -X POST -H " . $contentType . " -d " . $data . " " . $zabbixApiUrl . " | jq '.' ";
+        $returnVal = runCommand(sudo() . $command);
+        $informationOfTriggers = json_decode($returnVal,true);
+
+        $tableData = [];
+        $problemSeverity = array("Not classified", "Information", "Warning", "Average", "High", "Disaster");
+
+        for ($i=0; $i < count($informationOfTriggers["result"]); $i++) { 
+            $tableData[] = [
+                "priority" => $problemSeverity[$informationOfTriggers["result"][$i]["priority"]],
+                "triggerid" => $informationOfTriggers["result"][$i]["triggerid"],
+                "description" => $informationOfTriggers["result"][$i]["description"],
+                "expression" => $informationOfTriggers["result"][$i]["expression"],
+                "function" => $informationOfTriggers["result"][$i]["functions"][0]["function"],
+                "parameter" => $informationOfTriggers["result"][$i]["functions"][0]["parameter"]
+            ];
+        }
+
+        return view('table', [
+            "value" => $tableData,
+            "title" => ["Severity", "Trigger ID", "Description", "Expression", "Function", "Parameter"],
+            "display" => ["priority" , "triggerid", "description", "expression", "function", "parameter"],
+        ]);
+    }
+
 ?>
