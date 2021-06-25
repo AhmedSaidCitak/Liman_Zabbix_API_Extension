@@ -216,6 +216,7 @@
 
         $tableData = [];
         $problemSeverity = array("Not classified", "Information", "Warning", "Average", "High", "Disaster");
+        $statusCorrespondingValues = array("Enabled", "Disabled");
 
         for ($i=0; $i < count($informationOfTriggers["result"]); $i++) { 
             $tableData[] = [
@@ -224,15 +225,208 @@
                 "description" => $informationOfTriggers["result"][$i]["description"],
                 "expression" => $informationOfTriggers["result"][$i]["expression"],
                 "function" => $informationOfTriggers["result"][$i]["functions"][0]["function"],
-                "parameter" => $informationOfTriggers["result"][$i]["functions"][0]["parameter"]
+                "parameter" => $informationOfTriggers["result"][$i]["functions"][0]["parameter"],
+                "status" => $statusCorrespondingValues[$informationOfTriggers["result"][$i]["status"]]
             ];
         }
 
         return view('table', [
             "value" => $tableData,
-            "title" => ["Severity", "Trigger ID", "Description", "Expression", "Function", "Parameter"],
-            "display" => ["priority" , "triggerid", "description", "expression", "function", "parameter"],
+            "title" => ["Severity", "Trigger ID", "Description", "Expression", "Function", "Parameter", "Status"],
+            "display" => ["priority" , "triggerid", "description", "expression", "function", "parameter", "status"],
+            "menu" => [
+                "Delete Trigger" => [
+                    "target" => "deleteTrigger",
+                    "icon" => "fa-trash"
+                ],
+                "Edit Trigger" => [
+                    "target" => "showTriggerEditModal",
+                    "icon" => "fa-edit"
+                ],
+            ],
         ]);
+    }
+
+    function deleteTrigger() {
+        $contentType = "'Content-Type: application/json-rpc'";
+        $zabbixServer = "192.168.1.69";
+        $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
+        $auth = authenticate();
+        $triggerId = request('triggerId');
+        
+        $data = "'{ 
+            \"jsonrpc\": \"2.0\", 
+            \"method\": \"trigger.delete\",
+            \"params\": [
+                \"" . $triggerId . "\"
+            ],  
+            \"id\": 1,
+            \"auth\":\"" . $auth . "\"
+        }'";
+
+        $command = "curl -s -X POST -H " . $contentType . " -d " . $data . " " . $zabbixApiUrl . " | jq '.' ";
+        $returnVal = runCommand($command);
+        $deleteControl = json_decode($returnVal,true);
+
+        if($deleteControl["result"]["triggerids"][0] == $triggerId)
+            return respond("Trigger is successfully deleted",200);
+        else
+            return respond("Trigger cannot be deleted",400);
+    }
+
+    function createTrigger() {
+
+    }
+
+    function editTrigger() {
+        $contentType = "'Content-Type: application/json-rpc'";
+        $zabbixServer = "192.168.1.69";
+        $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
+        $auth = authenticate();
+        $triggerId = request('triggerId');
+        $severityLevel = request('severityLevel');
+        $status = request('status');
+        $comment = request('comment');
+        
+        $data = "'{ 
+            \"jsonrpc\": \"2.0\", 
+            \"method\": \"trigger.update\",
+            \"params\": {
+                \"triggerid\": \"" . $triggerId . "\",
+                \"status\": \"" . $status . "\",
+                \"priority\": \"" . $severityLevel . "\",
+                \"comments\": \"" . $comment . "\"
+            },  
+            \"id\": 1,
+            \"auth\":\"" . $auth . "\"
+        }'";
+
+        $command = "curl -s -X POST -H " . $contentType . " -d " . $data . " " . $zabbixApiUrl . " | jq '.' ";
+        $returnVal = runCommand($command);
+        $editControl = json_decode($returnVal,true);
+
+        if($editControl["result"]["triggerids"][0] == $triggerId)
+            return respond("Trigger is successfully updated",200);
+        else
+            return respond("Trigger cannot be updated",400);
+    }
+
+    function listProblematicTriggersOfGivenHost() {
+        $contentType = "'Content-Type: application/json-rpc'";
+        $zabbixServer = "192.168.1.69";
+        $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
+        $auth = authenticate();
+        $hostName = extensionDb('hostName');
+        
+        $data = "'{ 
+            \"jsonrpc\": \"2.0\", 
+            \"method\": \"trigger.get\",
+            \"params\": {
+                \"host\": \"" . $hostName . "\",
+                \"output\": [
+                    \"triggerid\",
+                    \"description\",
+                    \"priority\"
+                ],
+                \"filter\": {
+                    \"value\": 1
+                },
+                \"sortfield\": \"priority\",
+                \"sortorder\": \"DESC\"
+            },  
+            \"id\": 1,
+            \"auth\":\"" . $auth . "\"
+        }'";
+
+        $command = "curl -s -X POST -H " . $contentType . " -d " . $data . " " . $zabbixApiUrl . " | jq '.' ";
+        $returnVal = runCommand($command);
+        $informationOfTriggers = json_decode($returnVal,true);
+
+        if($informationOfTriggers["result"] == NULL) {
+            $tableData = [];
+            return view('table', [
+                "value" => $tableData,
+                "title" => ["Severity", "Trigger ID", "Description"]
+            ]);
+        }
+        else {
+            $problemSeverity = array("Not classified", "Information", "Warning", "Average", "High", "Disaster");
+
+            for ($i=0; $i < count($informationOfTriggers["result"]); $i++) { 
+                $tableData[] = [
+                    "priority" => $problemSeverity[$informationOfTriggers["result"][$i]["priority"]],
+                    "triggerid" => $informationOfTriggers["result"][$i]["triggerid"],
+                    "description" => $informationOfTriggers["result"][$i]["description"]
+                ];
+            }
+
+            return view('table', [
+                "value" => $tableData,
+                "title" => ["Severity", "Trigger ID", "Description"],
+                "display" => ["priority" , "triggerid", "description"],
+            ]);
+        }
+    }
+
+    function listAllAlertedTriggers() {
+        $contentType = "'Content-Type: application/json-rpc'";
+        $zabbixServer = "192.168.1.69";
+        $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
+        $auth = authenticate();
+
+        $data = "'{ 
+            \"jsonrpc\": \"2.0\", 
+            \"method\": \"trigger.get\",
+            \"params\": {
+                \"selectHosts\": [
+                    \"host\",
+                    \"hostid\"
+                ],
+                \"output\": [
+                    \"triggerid\",
+                    \"description\",
+                    \"priority\"
+                ],
+                \"filter\": {
+                    \"value\": 1
+                },
+                \"sortfield\": \"priority\",
+                \"sortorder\": \"DESC\"
+            },  
+            \"id\": 1,
+            \"auth\":\"" . $auth . "\"
+        }'";
+
+        $command = "curl -s -X POST -H " . $contentType . " -d " . $data . " " . $zabbixApiUrl . " | jq '.' ";
+        $returnVal = runCommand($command);
+        $informationOfTriggers = json_decode($returnVal,true);
+
+        if($informationOfTriggers["result"] == NULL) {
+            $tableData = [];
+            return view('table', [
+                "value" => $tableData,
+                "title" => ["Host ID", "Host", "Severity", "Trigger ID", "Description"]
+            ]);
+        }
+        else {
+            $problemSeverity = array("Not classified", "Information", "Warning", "Average", "High", "Disaster");
+
+            for ($i=0; $i < count($informationOfTriggers["result"]); $i++) { 
+                $tableData[] = [
+                    "priority" => $problemSeverity[$informationOfTriggers["result"][$i]["priority"]],
+                    "triggerid" => $informationOfTriggers["result"][$i]["triggerid"],
+                    "description" => $informationOfTriggers["result"][$i]["description"],
+                    "hostid" => $informationOfTriggers["result"][$i]["hosts"][0]["hostid"],
+                    "host" => $informationOfTriggers["result"][$i]["hosts"][0]["host"]
+                ];
+            }
+
+            return view('table', [
+                "value" => $tableData,
+                "title" => ["Host ID", "Host", "Severity", "Trigger ID", "Description"],
+                "display" => ["hostid", "host", "priority" , "triggerid", "description"],
+            ]);
+        }
     }
 
 ?>
