@@ -9,5 +9,10 @@ Zabbix API interface for Liman-MYS to observe some properties and features. <br/
     - Listing Host information, used **extension.db** to select particular host
 + List Given Host Triggers Tab
     - Listing Host triggers, used **extension.db** to select particular host
+    - Listing alerted triggers, used **extension.db** to select particular host
+    - Deleting trigger (via Right Click)
+    - Editing trigger (via Right Click)
++ All Alerted Triggers Tab
+    -Listing all alerted triggers located in all hosts
 
 Ahmed Said Çıtak - Intern at HAVELSAN - June 2021
