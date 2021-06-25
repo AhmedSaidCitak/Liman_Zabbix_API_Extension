@@ -423,8 +423,8 @@
 
             return view('table', [
                 "value" => $tableData,
-                "title" => ["Host ID", "Host", "Severity", "Trigger ID", "Description"],
-                "display" => ["hostid", "host", "priority" , "triggerid", "description"],
+                "title" => ["Severity", "Host ID", "Host", "Trigger ID", "Description"],
+                "display" => ["priority", "hostid", "host", "triggerid", "description"],
             ]);
         }
     }

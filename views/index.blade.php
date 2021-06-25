@@ -181,7 +181,7 @@
                 url : "/turkce.json"
             }
             });;
-            setColor();
+            setColorTriggers();
         }, function(response) {
             let error = JSON.parse(response);
             showSwal(error.message, 'error', 3000);
@@ -262,7 +262,7 @@
             $('#alertedTriggers-table').find('.table-body').html(response).find("table").DataTable(dataTablePresets('normal'));
             $('#ListingAlertedTriggersModal').find('.modal-title').html('<h4><strong>{{__("Alerted Triggers")}}</strong></h4>');
             $('#ListingAlertedTriggersModal').modal("show");
-
+            setColorGivenHostAlertedTriggers();
         }, function(response) {
             let error = JSON.parse(response);
             showSwal(error.message, 'error', 3000);
@@ -278,14 +278,51 @@
                 url : "/turkce.json"
             }
             });;
+            setColorAllAlertedTriggers();
         }, function(response) {
             let error = JSON.parse(response);
             showSwal(error.message, 'error', 3000);
         });
     }
 
-    function setColor() {
+    function setColorTriggers() {
         $('#zabbixGivenHostTriggerInfoTable').find("td[id='priority']").each(function(){
+            if($(this).text() == "Not classified"){
+                $(this).css('background-color', '#97AAB3');
+            }else if($(this).text() == "Information"){
+                $(this).css('background-color', '#7499FF');
+            }else if($(this).text() == "Warning"){
+                $(this).css('background-color', '#FFC859');
+            }else if($(this).text() == "Average"){
+                $(this).css('background-color', '#FFA059');
+            }else if($(this).text() == "High"){
+                $(this).css('background-color', '#E97659');
+            }else{
+                $(this).css('background-color', '#E45959');
+            }
+        });
+    }
+
+    function setColorAllAlertedTriggers() {
+        $('#zabbixAllAlertedTriggersTable').find("td[id='priority']").each(function(){
+            if($(this).text() == "Not classified"){
+                $(this).css('background-color', '#97AAB3');
+            }else if($(this).text() == "Information"){
+                $(this).css('background-color', '#7499FF');
+            }else if($(this).text() == "Warning"){
+                $(this).css('background-color', '#FFC859');
+            }else if($(this).text() == "Average"){
+                $(this).css('background-color', '#FFA059');
+            }else if($(this).text() == "High"){
+                $(this).css('background-color', '#E97659');
+            }else{
+                $(this).css('background-color', '#E45959');
+            }
+        });
+    }
+
+    function setColorGivenHostAlertedTriggers() {
+        $('#alertedTriggers-table').find("td[id='priority']").each(function(){
             if($(this).text() == "Not classified"){
                 $(this).css('background-color', '#97AAB3');
             }else if($(this).text() == "Information"){
