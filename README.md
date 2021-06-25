@@ -13,6 +13,6 @@ Zabbix API interface for Liman-MYS to observe some properties and features. <br/
     - Deleting trigger (via Right Click)
     - Editing trigger (via Right Click)
 + All Alerted Triggers Tab
-    -Listing all alerted triggers located in all hosts
+    - Listing all alerted triggers located in all hosts
 
 Ahmed Said Çıtak - Intern at HAVELSAN - June 2021
