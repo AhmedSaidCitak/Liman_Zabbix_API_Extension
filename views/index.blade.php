@@ -181,6 +181,7 @@
                 url : "/turkce.json"
             }
             });;
+            setColor();
         }, function(response) {
             let error = JSON.parse(response);
             showSwal(error.message, 'error', 3000);
@@ -280,6 +281,24 @@
         }, function(response) {
             let error = JSON.parse(response);
             showSwal(error.message, 'error', 3000);
+        });
+    }
+
+    function setColor() {
+        $('#zabbixGivenHostTriggerInfoTable').find("td[id='priority']").each(function(){
+            if($(this).text() == "Not classified"){
+                $(this).css('background-color', '#97AAB3');
+            }else if($(this).text() == "Information"){
+                $(this).css('background-color', '#7499FF');
+            }else if($(this).text() == "Warning"){
+                $(this).css('background-color', '#FFC859');
+            }else if($(this).text() == "Average"){
+                $(this).css('background-color', '#FFA059');
+            }else if($(this).text() == "High"){
+                $(this).css('background-color', '#E97659');
+            }else{
+                $(this).css('background-color', '#E45959');
+            }
         });
     }
     
