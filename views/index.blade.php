@@ -71,24 +71,41 @@
 
 <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 15px;">
     <li class="nav-item">
-        <a class="nav-link active"  onclick="listHostsTab()" href="#tab1" data-toggle="tab">Hosts</a>
+        <a class="nav-link active"  onclick="listHostsTab()" href="#tab1" data-toggle="tab">
+        <i class="fas fa-server mr-2"></i>
+        {{__('Hosts')}}</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link "  onclick="ListGivenHostInfo()" href="#tab2" data-toggle="tab">Given Host Info</a>
+        <a class="nav-link "  onclick="ListGivenHostInfo()" href="#tab2" data-toggle="tab">
+        <i class="fas fa-info-circle mr-2"></i>
+        {{__('Info')}}</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link "  onclick="listGivenHostTriggers()" href="#tab3" data-toggle="tab">Given Host Triggers</a>
+        <a class="nav-link "  onclick="listGivenHostTriggers()" href="#tab3" data-toggle="tab">
+        <i class="far fa-bell mr-2"></i>
+        {{__('Triggers')}}</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link "  onclick="listAllAlertedTriggers()" href="#tab4" data-toggle="tab">All Alerted Triggers</a>
+        <a class="nav-link "  onclick="listAllAlertedTriggers()" href="#tab4" data-toggle="tab">
+        <i class="fas fa-bell mr-2"></i>
+        {{__('All Alerted Triggers')}}</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link "  onclick="zabbixVersion()" href="#tab5" data-toggle="tab">
+        <i class="fas fa-map-marker mr-2"></i>
+        {{__('Zabbix Version')}}</a>
     </li>
 </ul>
 
 <div class="tab-content">
     <div id="tab1" class="tab-pane active">
-        <div class="table-responsive ZabbixTable table-striped" id="zabbixHostTable"></div> 
+        <div class="table-responsive ZabbixTable table-striped " id="zabbixHostTable"></div> 
     </div>
     <div id="tab2" class="tab-pane">
+        <div class="input-group mb-2">
+            <input id="hostNameForInfo" type="text" class="form-control" placeholder="Host Name" aria-label="Host Name" aria-describedby="button-addon1">
+            <button class="btn btn-primary" id="button-addon1" onclick="takeHostNameListInfo()" type="button">List Info</button>
+        </div>
         <div class="table-responsive ZabbixTable table-striped" id="zabbixGivenHostInfoTable"></div> 
     </div>
     <div id="tab3" class="tab-pane">
@@ -96,19 +113,38 @@
             <button class="btn btn-success mb-2" id="triggerCreateButton" onclick="showTriggerCreateModal()" type="button">Create Trigger</button>
             <button class="btn btn-success mb-2" id="problematicTriggersButton" onclick="showListingAlertedTriggersModal()" type="button">Alerted Triggers</button>
         </div>
+        <div class="input-group mb-3">
+            <input id="hostNameForTriggers" type="text" class="form-control" placeholder="Host Name" aria-label="Host Name" aria-describedby="button-addon2">
+            <button class="btn btn-primary" id="button-addon2" onclick="takeHostNameListTriggers()" type="button">List Triggers</button>
+        </div>
         <div class="table-responsive ZabbixTable table-striped" id="zabbixGivenHostTriggerInfoTable"></div> 
     </div>
     <div id="tab4" class="tab-pane">
         <div class="table-responsive ZabbixTable table-striped" id="zabbixAllAlertedTriggersTable"></div> 
     </div>
+    <div id="tab5" class="tab-pane">
+        <div class="card" style="width: 18rem;" >
+            <div id="zabbixVersion" class="card-body">
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
 
+    if(location.hash === ""){
+        listHostsTab();
+    }
+
     var globalTriggerId;
+    var userGivenHostNameForTriggers = "";
+    var userGivenHostNameForInfo;
+
+    // *** TAB #1 HOSTS ***
 
     function listHostsTab() {
         var form = new FormData();
+        console.log("girdi");
         request(API('listHosts'), form, function(response) {
             $('#zabbixHostTable').html(response).find('table').DataTable({
             bFilter: true,
@@ -139,7 +175,7 @@
     }
 
     function showHostDetailedInfoModal(line) {
-        showSwal('{{__("Yükleniyor...")}}','info',2000);
+        showSwal('{{__("Yükleniyor...")}}','info',1000);
         
         var form = new FormData();
         let hostName = line.querySelector("#host").innerHTML;
@@ -157,8 +193,11 @@
         });
     }
 
+    // *** TAB #2 GIVEN HOST INFO
+
     function ListGivenHostInfo() {
         var form = new FormData();
+        form.append("userGivenHostName", userGivenHostNameForInfo);
         request(API('givenHostDetailedInfo'), form, function(response) {
             $('#zabbixGivenHostInfoTable').html(response).find('table').DataTable({
             bFilter: true,
@@ -172,8 +211,16 @@
         });
     }
 
+    function takeHostNameListInfo() {
+        userGivenHostNameForInfo = document.getElementById("hostNameForInfo").value;
+        ListGivenHostInfo();
+    }
+
+    // *** TAB #3 GIVEN HOST TRIGGERS
+
     function listGivenHostTriggers() {
         var form = new FormData();
+        form.append("userGivenHostName", userGivenHostNameForTriggers);
         request(API('listTriggersOfGivenHost'), form, function(response) {
             $('#zabbixGivenHostTriggerInfoTable').html(response).find('table').DataTable({
             bFilter: true,
@@ -181,7 +228,8 @@
                 url : "/turkce.json"
             }
             });;
-            setColorTriggers();
+            setColor("zabbixGivenHostTriggerInfoTable");
+            setBadges();
         }, function(response) {
             let error = JSON.parse(response);
             showSwal(error.message, 'error', 3000);
@@ -219,7 +267,7 @@
         form.append("severityLevel", severityLevel);
 
         request(API('createTrigger'), form, function(response) {
-            listGivenHostTriggers()
+            listGivenHostTriggers();
             message = JSON.parse(response)["message"];
             showSwal(message, 'success', 5000);
         }, function(response) {
@@ -258,16 +306,25 @@
     function showListingAlertedTriggersModal() {
         showSwal('{{__("Yükleniyor...")}}','info',2000);
         var form = new FormData();
+        var variable = userGivenHostNameForTriggers;
+        form.append("userGivenHostName", variable);
         request(API('listProblematicTriggersOfGivenHost'), form, function(response) {
             $('#alertedTriggers-table').find('.table-body').html(response).find("table").DataTable(dataTablePresets('normal'));
             $('#ListingAlertedTriggersModal').find('.modal-title').html('<h4><strong>{{__("Alerted Triggers")}}</strong></h4>');
             $('#ListingAlertedTriggersModal').modal("show");
-            setColorGivenHostAlertedTriggers();
+            setColor("alertedTriggers-table");
         }, function(response) {
             let error = JSON.parse(response);
             showSwal(error.message, 'error', 3000);
         });
     }
+
+    function takeHostNameListTriggers() {
+        userGivenHostNameForTriggers = document.getElementById("hostNameForTriggers").value;
+        listGivenHostTriggers();
+    }
+
+    // *** TAB #4 ALL ALERTED TRIGGERS
 
     function listAllAlertedTriggers() {
         var form = new FormData();
@@ -278,15 +335,28 @@
                 url : "/turkce.json"
             }
             });;
-            setColorAllAlertedTriggers();
+            setColor("zabbixAllAlertedTriggersTable");
         }, function(response) {
             let error = JSON.parse(response);
             showSwal(error.message, 'error', 3000);
         });
     }
 
-    function setColorTriggers() {
-        $('#zabbixGivenHostTriggerInfoTable').find("td[id='priority']").each(function(){
+    // *** TAB #5 ZABBIX VERSION ***
+
+    function zabbixVersion() {
+        var form = new FormData();
+        request(API('zabbixVersion'), form, function(response) {
+            message = JSON.parse(response)["message"];
+            $('#zabbixVersion').html(message);
+        }, function(response) {
+            let error = JSON.parse(response);
+            showSwal(error.message, 'error', 3000);
+        });
+    }
+
+    function setColor(id) {
+        $("#" + id).find("td[id='priority']").each(function(){
             if($(this).text() == "Not classified"){
                 $(this).css('background-color', '#97AAB3');
             }else if($(this).text() == "Information"){
@@ -303,40 +373,15 @@
         });
     }
 
-    function setColorAllAlertedTriggers() {
-        $('#zabbixAllAlertedTriggersTable').find("td[id='priority']").each(function(){
-            if($(this).text() == "Not classified"){
-                $(this).css('background-color', '#97AAB3');
-            }else if($(this).text() == "Information"){
-                $(this).css('background-color', '#7499FF');
-            }else if($(this).text() == "Warning"){
-                $(this).css('background-color', '#FFC859');
-            }else if($(this).text() == "Average"){
-                $(this).css('background-color', '#FFA059');
-            }else if($(this).text() == "High"){
-                $(this).css('background-color', '#E97659');
+    function setBadges(){
+        $('#zabbixGivenHostTriggerInfoTable').find("td[id='status']").each(function(){
+            $(this).addClass("text-center");
+            if($(this).text() == "Enabled"){
+                $(this).html(`<small class="badge badge-success">{{ __('Enabled')}}</small>`);
             }else{
-                $(this).css('background-color', '#E45959');
+                $(this).html(`<small class="badge badge-danger">{{ __('Disabled')}}</small>`);
             }
         });
     }
 
-    function setColorGivenHostAlertedTriggers() {
-        $('#alertedTriggers-table').find("td[id='priority']").each(function(){
-            if($(this).text() == "Not classified"){
-                $(this).css('background-color', '#97AAB3');
-            }else if($(this).text() == "Information"){
-                $(this).css('background-color', '#7499FF');
-            }else if($(this).text() == "Warning"){
-                $(this).css('background-color', '#FFC859');
-            }else if($(this).text() == "Average"){
-                $(this).css('background-color', '#FFA059');
-            }else if($(this).text() == "High"){
-                $(this).css('background-color', '#E97659');
-            }else{
-                $(this).css('background-color', '#E45959');
-            }
-        });
-    }
-    
 </script>

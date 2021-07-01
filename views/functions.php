@@ -17,10 +17,10 @@
         }'";
 
         $command = "curl -s -X POST -H " . $contentType . " -d " . $data . " " . $zabbixApiUrl . " | jq '.' ";
-        $returnVal = runCommand(sudo() . $command);
+        $returnVal = runCommand($command);
         $output = json_decode($returnVal,true);
         $auth = $output['result'];
-        
+
         return $auth;
     }
 
@@ -90,7 +90,7 @@
         }'";
 
         $command = "curl -s -X POST -H " . $contentType . " -d " . $data . " " . $zabbixApiUrl . " | jq '.' ";
-        $returnVal = runCommand(sudo() . $command);
+        $returnVal = runCommand($command);
         $info = json_decode($returnVal,true);
 
         $hostId = request('hostId');
@@ -108,17 +108,24 @@
         $zabbixServer = "192.168.1.69";
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
+        $hostId = request('hostId');
         
         $data = "'{ 
             \"jsonrpc\": \"2.0\", 
             \"method\": \"host.get\",
-            \"params\": {},  
+            \"params\": {
+                \"filter\": {
+                    \"hostid\": [
+                        \"" . $hostId . "\"
+                    ]
+                }
+            },  
             \"id\": 1,
             \"auth\":\"" . $auth . "\"
         }'";
 
         $command = "curl -s -X POST -H " . $contentType . " -d " . $data . " " . $zabbixApiUrl . " | jq '.' ";
-        $returnVal = runCommand(sudo() . $command);
+        $returnVal = runCommand($command);
         $informationOfHosts = json_decode($returnVal,true);
 
         $tableData = [];
@@ -126,25 +133,20 @@
                         "ipmi_privilege", "ipmi_username", "ipmi_password", "ipmi_disable_until", "ipmi_available", "snmp_disable_until", "snmp_available", "maintenanceid", "maintenance_status", "maintenance_type",
                         "maintenance_from", "ipmi_errors_from", "snmp_errors_from", "ipmi_error", "snmp_error", "jmx_disable_until", "jmx_available", "jmx_errors_from", "jmx_error", "name",
                         "flags", "templateid", "description", "tls_connect", "tls_accept", "tls_issuer", "tls_subject", "tls_psk_identity", "tls_psk", "proxy_address", "auto_compress");
-        
-        $hostId = request('hostId');
 
-        for ($i=0; $i < count($informationOfHosts["result"]) ; $i++) { 
-            if($informationOfHosts["result"][$i]["hostid"] == $hostId) {
-                for ($j=0; $j < count($attrArray); $j++) {
-                    $tableData[] = [
-                        "attrName" => $attrArray[$j],
-                        "attrValue" => $informationOfHosts["result"][$i][$attrArray[$j]]
-                    ];
-                }
-                
-                return view('table', [
-                    "value" => $tableData,
-                    "title" => ["Host Attributes", "Values"],
-                    "display" => ["attrName" , "attrValue"],
-                ]);
-            }
+        for ($j=0; $j < count($attrArray); $j++) {
+            $tableData[] = [
+                "attrName" => $attrArray[$j],
+                "attrValue" => $informationOfHosts["result"][0][$attrArray[$j]]
+            ];
         }
+        
+        return view('table', [
+            "value" => $tableData,
+            "title" => ["Host Attributes", "Values"],
+            "display" => ["attrName" , "attrValue"],
+        ]);
+
     }
 
     function givenHostDetailedInfo() {
@@ -152,17 +154,25 @@
         $zabbixServer = "192.168.1.69";
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
+//        $hostName = extensionDb('hostName');
+        $hostName = request('userGivenHostName');
         
         $data = "'{ 
             \"jsonrpc\": \"2.0\", 
             \"method\": \"host.get\",
-            \"params\": {},  
+            \"params\": {
+                \"filter\": {
+                    \"host\": [
+                        \"" . $hostName . "\"
+                    ]
+                }
+            },  
             \"id\": 1,
             \"auth\":\"" . $auth . "\"
         }'";
 
         $command = "curl -s -X POST -H " . $contentType . " -d " . $data . " " . $zabbixApiUrl . " | jq '.' ";
-        $returnVal = runCommand(sudo() . $command);
+        $returnVal = runCommand($command);
         $informationOfHosts = json_decode($returnVal,true);
 
         $tableData = [];
@@ -170,25 +180,27 @@
                         "ipmi_privilege", "ipmi_username", "ipmi_password", "ipmi_disable_until", "ipmi_available", "snmp_disable_until", "snmp_available", "maintenanceid", "maintenance_status", "maintenance_type",
                         "maintenance_from", "ipmi_errors_from", "snmp_errors_from", "ipmi_error", "snmp_error", "jmx_disable_until", "jmx_available", "jmx_errors_from", "jmx_error", "name",
                         "flags", "templateid", "description", "tls_connect", "tls_accept", "tls_issuer", "tls_subject", "tls_psk_identity", "tls_psk", "proxy_address", "auto_compress");
-        
-        $hostName = extensionDb('hostName');
 
-        for ($i=0; $i < count($informationOfHosts["result"]) ; $i++) { 
-            if($informationOfHosts["result"][$i]["host"] == $hostName) {
-                for ($j=0; $j < count($attrArray); $j++) {
-                    $tableData[] = [
-                        "attrName" => $attrArray[$j],
-                        "attrValue" => $informationOfHosts["result"][$i][$attrArray[$j]]
-                    ];
-                }
-                
-                return view('table', [
-                    "value" => $tableData,
-                    "title" => ["Host Attributes", "Values"],
-                    "display" => ["attrName" , "attrValue"],
-                ]);
-            }
+        if(count($informationOfHosts["result"]) == 0) {
+            return view('table', [
+                "value" => $tableData,
+                "title" => ["Host Attributes", "Values"],
+                "display" => [],
+            ]);
         }
+
+        for ($j=0; $j < count($attrArray); $j++) {
+            $tableData[] = [
+                "attrName" => $attrArray[$j],
+                "attrValue" => $informationOfHosts["result"][0][$attrArray[$j]]
+            ];
+        }
+        
+        return view('table', [
+            "value" => $tableData,
+            "title" => ["Host Attributes", "Values"],
+            "display" => ["attrName" , "attrValue"],
+        ]);
     }
 
     function listTriggersOfGivenHost() {
@@ -196,7 +208,8 @@
         $zabbixServer = "192.168.1.69";
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
-        $hostName = extensionDb('hostName');
+//        $hostName = extensionDb('hostName');
+        $hostName = request('userGivenHostName');
         
         $data = "'{ 
             \"jsonrpc\": \"2.0\", 
@@ -211,7 +224,7 @@
         }'";
 
         $command = "curl -s -X POST -H " . $contentType . " -d " . $data . " " . $zabbixApiUrl . " | jq '.' ";
-        $returnVal = runCommand(sudo() . $command);
+        $returnVal = runCommand($command);
         $informationOfTriggers = json_decode($returnVal,true);
 
         $tableData = [];
@@ -275,7 +288,38 @@
     }
 
     function createTrigger() {
+        $contentType = "'Content-Type: application/json-rpc'";
+        $zabbixServer = "192.168.1.69";
+        $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
+        $auth = authenticate();
+        $triggerName = request('triggerName');
+        $expr = request('expression');
+        $priority = request('severityLevel');
 
+        $data = "'{ 
+            \"jsonrpc\": \"2.0\", 
+            \"method\": \"trigger.create\",
+            \"params\": [
+                {
+                    \"description\": \"" . $triggerName . "\",
+                    \"expression\": \"" . $expr . "\",
+                    \"priority\": \"" . $priority . "\"
+                }
+            ],  
+            \"id\": 1,
+            \"auth\":\"" . $auth . "\"
+        }'";
+
+        $command = "curl -s -X POST -H " . $contentType . " -d " . $data . " " . $zabbixApiUrl . " | jq '.' ";
+        $returnVal = runCommand($command);
+        $createControl = json_decode($returnVal,true);
+
+//        print_r($createControl);
+
+        if(isset($createControl["result"]["triggerids"][0]))
+            return respond("Trigger is successfully created with trigger id = " . $createControl["result"]["triggerids"][0],200);
+        else
+            return respond("Trigger cannot be created",400);
     }
 
     function editTrigger() {
@@ -305,6 +349,8 @@
         $returnVal = runCommand($command);
         $editControl = json_decode($returnVal,true);
 
+//        print_r($editControl);
+
         if($editControl["result"]["triggerids"][0] == $triggerId)
             return respond("Trigger is successfully updated",200);
         else
@@ -316,8 +362,13 @@
         $zabbixServer = "192.168.1.69";
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
-        $hostName = extensionDb('hostName');
-        
+//        $hostName = extensionDb('hostName');
+
+        validate([
+            'userGivenHostName' => 'required|string',
+        ]);
+        $hostName = request('userGivenHostName');
+
         $data = "'{ 
             \"jsonrpc\": \"2.0\", 
             \"method\": \"trigger.get\",
@@ -427,6 +478,12 @@
                 "display" => ["priority", "hostid", "host", "triggerid", "description"],
             ]);
         }
+    }
+
+    function zabbixVersion() {
+        $output = runCommand(sudo() . "zabbix_server --version");
+        $version = explode("Revision", $output);
+        return respond($version[0],200);
     }
 
 ?>
