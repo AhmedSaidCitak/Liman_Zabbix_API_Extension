@@ -2,12 +2,30 @@
     "name": "Zabbix",
     "publisher": "Administrator",
     "version": "0.0.1",
-    "version_code": 10,
+    "version_code": 19,
     "database": [
         {
-            "variable": "hostName",
+            "variable": "user",
             "type": "text",
-            "name": "Zabbix eklentisindeki 2. tabda, \u00f6zelliklerini listelemek istedi\u011finiz sunucu ad\u0131n\u0131 giriniz",
+            "name": "User Name for Zabbix API query",
+            "required": false
+        },
+        {
+            "variable": "password",
+            "type": "password",
+            "name": "Password for Zabbix API query",
+            "required": false
+        },
+        {
+            "variable": "contentType",
+            "type": "text",
+            "name": "Content Type",
+            "required": false
+        },
+        {
+            "variable": "zabbixServerIP",
+            "type": "text",
+            "name": "Zabbix Server IP address",
             "required": false
         }
     ],

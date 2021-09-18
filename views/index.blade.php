@@ -91,6 +91,11 @@
         {{__('All Alerted Triggers')}}</a>
     </li>
     <li class="nav-item">
+        <a class="nav-link "  onclick="zabbixGraph()" href="#tab6" data-toggle="tab">
+        <i class="fas fa-chart-bar mr-2"></i>
+        {{__('Zabbix Graph')}}</a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link "  onclick="zabbixVersion()" href="#tab5" data-toggle="tab">
         <i class="fas fa-map-marker mr-2"></i>
         {{__('Zabbix Version')}}</a>
@@ -123,9 +128,19 @@
         <div class="table-responsive ZabbixTable table-striped" id="zabbixAllAlertedTriggersTable"></div> 
     </div>
     <div id="tab5" class="tab-pane">
-        <div class="card" style="width: 18rem;" >
+        <div class="card" style="width: 18rem;">
             <div id="zabbixVersion" class="card-body">
             </div>
+        </div>
+    </div>
+    <div id="tab6" class="tab-pane">
+        <button class="btn btn-success" id="button-refresh" onclick="refreshGraph()" type="button">Refresh</button>
+        <div id="deneme" class="card-body">
+        <div class="graph" style="width: 18rem;">
+            <img src="{{  API('graphImageById') }}" >
+        </div>
+        <div class="graph2" style="width: 18rem;">
+            <img src="{{  API('graphImageById') }}" >
         </div>
     </div>
 </div>
@@ -295,6 +310,13 @@
         request(API('editTrigger'), form, function(response) {
             listGivenHostTriggers();
             $('#TriggerEditModal').modal("hide");
+            $('#TriggerEditModal').find('select[name=severityLevel]').val("Not Classified");
+            $('#TriggerEditModal').find('select[name=status]').val("status['Enabled']");
+            $("#TriggerEditModal").find('input[name=comment]').val("");
+            /*
+            document.getElementById("comment").value = "";
+            document.getElementById("status").value = "Enabled";
+            */
             message = JSON.parse(response)["message"];
             showSwal(message, 'success', 5000);
         }, function(response) {
@@ -353,6 +375,29 @@
             let error = JSON.parse(response);
             showSwal(error.message, 'error', 3000);
         });
+    }
+
+    // *** TAB #6 ZABBIX GRAPH
+
+    function zabbixGraph() {
+        var form = new FormData();
+        form.append('graphid', 847);
+        form.append('width', 800);
+        form.append('height', 800);
+        request(API('graphImageById'), form, function(response) {
+//            $('#deneme').html(response);
+            message = JSON.parse(response)["message"];
+            $(".graph").find("img").attr("src", message["image1"]);
+            $(".graph2").find("img").attr("src", message["image2"]);
+
+        }, function(response) {
+            let error = JSON.parse(response);
+            showSwal(error.message, 'error', 3000);
+        });
+    }
+
+    function refreshGraph() {
+        zabbixGraph();
     }
 
     function setColor(id) {

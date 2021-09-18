@@ -1,17 +1,18 @@
 <?php
 
     function authenticate() {
-        $contentType = "'Content-Type: application/json-rpc'";
-        $zabbixServer = "192.168.1.69";
+        $contentType = "'Content-Type: " . extensionDb('contentType') . "'";
+        $zabbixServer = extensionDb('zabbixServerIP');
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
-        $user = "\"Admin\"";
+        $user = "\"" . extensionDb('user') . "\"";
+        $password = "\"" . extensionDb('password') . "\"";
 
         $data = "'{ 
             \"jsonrpc\": \"2.0\", 
             \"method\": \"user.login\",
             \"params\": { 
                 \"user\": " . $user . ", 
-                \"password\": \"zabbix\" 
+                \"password\": " . $password . " 
             },  
             \"id\": 0 
         }'";
@@ -25,8 +26,8 @@
     }
 
     function listHosts() {
-        $contentType = "'Content-Type: application/json-rpc'";
-        $zabbixServer = "192.168.1.69";
+        $contentType = "'Content-Type: " . extensionDb('contentType') . "'";
+        $zabbixServer = extensionDb('zabbixServerIP');
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
         
@@ -67,8 +68,8 @@
     }
 
     function serverUptimeInfo() {  
-        $contentType = "'Content-Type: application/json-rpc'";
-        $zabbixServer = "192.168.1.69";
+        $contentType = "'Content-Type: " . extensionDb('contentType') . "'";
+        $zabbixServer = extensionDb('zabbixServerIP');
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
         
@@ -104,8 +105,8 @@
     }
 
     function hostDetailedInfo() {
-        $contentType = "'Content-Type: application/json-rpc'";
-        $zabbixServer = "192.168.1.69";
+        $contentType = "'Content-Type: " . extensionDb('contentType') . "'";
+        $zabbixServer = extensionDb('zabbixServerIP');
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
         $hostId = request('hostId');
@@ -150,11 +151,10 @@
     }
 
     function givenHostDetailedInfo() {
-        $contentType = "'Content-Type: application/json-rpc'";
-        $zabbixServer = "192.168.1.69";
+        $contentType = "'Content-Type: " . extensionDb('contentType') . "'";
+        $zabbixServer = extensionDb('zabbixServerIP');
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
-//        $hostName = extensionDb('hostName');
         $hostName = request('userGivenHostName');
         
         $data = "'{ 
@@ -204,11 +204,10 @@
     }
 
     function listTriggersOfGivenHost() {
-        $contentType = "'Content-Type: application/json-rpc'";
-        $zabbixServer = "192.168.1.69";
+        $contentType = "'Content-Type: " . extensionDb('contentType') . "'";
+        $zabbixServer = extensionDb('zabbixServerIP');
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
-//        $hostName = extensionDb('hostName');
         $hostName = request('userGivenHostName');
         
         $data = "'{ 
@@ -261,8 +260,8 @@
     }
 
     function deleteTrigger() {
-        $contentType = "'Content-Type: application/json-rpc'";
-        $zabbixServer = "192.168.1.69";
+        $contentType = "'Content-Type: " . extensionDb('contentType') . "'";
+        $zabbixServer = extensionDb('zabbixServerIP');
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
         $triggerId = request('triggerId');
@@ -288,8 +287,8 @@
     }
 
     function createTrigger() {
-        $contentType = "'Content-Type: application/json-rpc'";
-        $zabbixServer = "192.168.1.69";
+        $contentType = "'Content-Type: " . extensionDb('contentType') . "'";
+        $zabbixServer = extensionDb('zabbixServerIP');
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
         $triggerName = request('triggerName');
@@ -323,8 +322,8 @@
     }
 
     function editTrigger() {
-        $contentType = "'Content-Type: application/json-rpc'";
-        $zabbixServer = "192.168.1.69";
+        $contentType = "'Content-Type: " . extensionDb('contentType') . "'";
+        $zabbixServer = extensionDb('zabbixServerIP');
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
         $triggerId = request('triggerId');
@@ -358,11 +357,10 @@
     }
 
     function listProblematicTriggersOfGivenHost() {
-        $contentType = "'Content-Type: application/json-rpc'";
-        $zabbixServer = "192.168.1.69";
+        $contentType = "'Content-Type: " . extensionDb('contentType') . "'";
+        $zabbixServer = extensionDb('zabbixServerIP');
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
-//        $hostName = extensionDb('hostName');
 
         validate([
             'userGivenHostName' => 'required|string',
@@ -420,8 +418,8 @@
     }
 
     function listAllAlertedTriggers() {
-        $contentType = "'Content-Type: application/json-rpc'";
-        $zabbixServer = "192.168.1.69";
+        $contentType = "'Content-Type: " . extensionDb('contentType') . "'";
+        $zabbixServer = extensionDb('zabbixServerIP');
         $zabbixApiUrl = "'http://" . $zabbixServer . "/zabbix/api_jsonrpc.php'";
         $auth = authenticate();
 
@@ -484,6 +482,58 @@
         $output = runCommand(sudo() . "zabbix_server --version");
         $version = explode("Revision", $output);
         return respond($version[0],200);
+    }
+
+    function graphImageById() { 
+        //CONFIGURATION
+        $z_server = 'http://192.168.1.69//zabbix/';
+        $z_user   = 'Admin';
+        $z_pass   = 'zabbix';
+        $period   = 3600;
+        $graphid = request('graphid');
+        $width = request('width');
+        //NON CONFIGURABLE
+        $z_tmp_cookies = "";
+        $z_url_index   = $z_server ."index.php";
+        $z_url_graph   = $z_server ."chart2.php";
+        $z_url_api     = $z_server ."api_jsonrpc.php";
+
+        // Zabbix 2.0
+        $z_login_data  = array('name' => $z_user, 'password' => $z_pass, 'enter' => "Sign in");
+        
+        // file names
+        $filename_cookie = $z_tmp_cookies ."zabbix_cookie_" .$graphid .".txt";
+
+        //setup curl
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $z_url_index);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $z_login_data);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $filename_cookie);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $filename_cookie);
+        // login
+        curl_exec($ch);
+        // get graph
+        curl_setopt($ch, CURLOPT_URL, $z_url_graph ."?graphid=" .$graphid ."&width=" .$width ."&period=" .$period);
+        $output = curl_exec($ch);
+        $graphid = 836;
+        curl_setopt($ch, CURLOPT_URL, $z_url_graph ."?graphid=" .$graphid ."&width=" .$width ."&period=" .$period);
+        $output2 = curl_exec($ch);
+        curl_close($ch);
+        // delete cookie
+//        unlink($filename_cookie);
+        
+        $image1 = 'data:image/' . "png" . ';base64,' . base64_encode($output);
+        $image2 = 'data:image/' . "png" . ';base64,' . base64_encode($output2);
+        $images = array("image1" => $image1, "image2" => $image2);
+        return respond($images,200);
+
+//        return 'data:image/' . "png" . ';base64,' . base64_encode($output);
+
     }
 
 ?>
