@@ -18,6 +18,9 @@ Zabbix API interface for Liman-MYS to observe some properties and features. <br/
 + All Alerted Triggers Tab
     - Listing all alerted triggers located in all hosts
     - Adding **background color** of trigger severity level depending on its priority
++ Zabbix Graph Tab
+    - Monitoring specified graphics
+    - Refresh button
 + Zabbix Version Tab
     - Providing current zabbix server version
 
